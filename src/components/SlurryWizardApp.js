@@ -3,8 +3,7 @@ import AHDBLogo from '../assets/ahdb-logo.png';
 import { 
   livestockReferenceData, 
   bankSlopeFactors, 
-  rainfallData, 
-  colors 
+  rainfallData
 } from '../data/referenceData';
 import './SlurryWizardApp.css';
 
@@ -581,6 +580,7 @@ function SlurryWizardApp() {
   // Effect to run calculations when form data changes
   useEffect(() => {
     performCalculations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData]);
   
   // Render the UI
@@ -602,7 +602,7 @@ function SlurryWizardApp() {
               <button 
                 onClick={() => setActiveTab(0)}
                 className={`tab-button ${activeTab === 0 ? 'active' : ''}`}
-                aria-selected={activeTab === 0}
+                aria-pressed={activeTab === 0}
                 aria-controls="tab-panel-0"
                 id="tab-0"
               >
@@ -613,7 +613,7 @@ function SlurryWizardApp() {
               <button 
                 onClick={() => setActiveTab(1)}
                 className={`tab-button ${activeTab === 1 ? 'active' : ''}`}
-                aria-selected={activeTab === 1}
+                aria-pressed={activeTab === 1}
                 aria-controls="tab-panel-1"
                 id="tab-1"
               >
@@ -624,7 +624,7 @@ function SlurryWizardApp() {
               <button 
                 onClick={() => setActiveTab(2)}
                 className={`tab-button ${activeTab === 2 ? 'active' : ''}`}
-                aria-selected={activeTab === 2}
+                aria-pressed={activeTab === 2}
                 aria-controls="tab-panel-2"
                 id="tab-2"
               >
