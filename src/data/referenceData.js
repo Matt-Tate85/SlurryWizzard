@@ -10,16 +10,6 @@ export const bankSlopeFactors = {
   "Bank slope of 1:3 (18.4 degrees)": 6
 };
 
-// Simplified rainfall data by grid reference
-// This would usually have more detailed data per grid reference
-export const rainfallData = {
-  'DEFAULT': [50, 48, 45, 40, 35, 30, 32, 35, 40, 45, 48, 50], // Monthly rainfall in mm
-  'SP41': [60, 55, 50, 45, 40, 35, 38, 42, 48, 52, 58, 62],
-  'SP42': [58, 53, 48, 43, 38, 32, 35, 40, 45, 50, 55, 60],
-  'SP43': [62, 58, 52, 48, 42, 38, 40, 45, 50, 55, 60, 65],
-  // Add more grid references as needed
-};
-
 // UI color scheme
 export const colors = {
   primary: '#0090d4',
