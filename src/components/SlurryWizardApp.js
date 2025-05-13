@@ -3,8 +3,6 @@ import AHDBLogo from '../assets/ahdb-logo.png';
 import { 
   livestockReferenceData, 
   bankSlopeFactors
-  // Removed rainfallData from here
-} from '../data/referenceData';
 import RainfallService from '../services/RainfallService'; // Added this import
 import './SlurryWizardApp.css';
 
