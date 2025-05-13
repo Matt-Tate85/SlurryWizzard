@@ -23,12 +23,15 @@ jobs:
           node-version: '18.x'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
         env:
           CI: false
+
+      - name: List build directory
+        run: ls -la build || echo "Build directory not found"
 
       - name: Deploy
         id: deploy
