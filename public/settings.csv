@@ -1,0 +1,3 @@
+﻿setting_name,setting_value,description
+upper_rainfall_limit,100,Upper likely maximum 2 day rainfall (mm)
+lower_rainfall_limit,50,Lower likely maximum 2 day rainfall (mm)
