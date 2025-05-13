@@ -1,0 +1,19 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  },
+  "routes": [
+    {
+      "route": "/build/*",
+      "serve": "/build/*"
+    },
+    {
+      "route": "/static/*",
+      "serve": "/build/static/*"
+    },
+    {
+      "route": "/*",
+      "serve": "/index.html"
+    }
+  ]
+}
