@@ -100,7 +100,7 @@ const calculateStorageRequirements = (adjustedRainfall, uncoveredYardArea, slurr
   };
 };
 
-export default {
+const RainfallService = {
   extract4FigureGridRef,
   getRainfallData,
   getSettings,
@@ -108,3 +108,5 @@ export default {
   calculateMaxLikely2DayRainfall,
   calculateStorageRequirements
 };
+
+export default RainfallService;
