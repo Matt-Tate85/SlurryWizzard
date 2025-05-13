@@ -1,24 +1,11 @@
 import Papa from 'papaparse';
-import * as FileSystem from 'react-native-fs';
-
-// Base path to assets
-const BASE_PATH = FileSystem.DocumentDirectoryPath;
 
 // Load CSV file
 const loadCsvFile = async (fileName) => {
   try {
-    // Check if the file exists in the document directory
-    const filePath = `${BASE_PATH}/${fileName}`;
-    const fileExists = await FileSystem.exists(filePath);
-    
-    if (!fileExists) {
-      // If not in document directory, copy from app bundle
-      const bundlePath = `${FileSystem.MainBundlePath}/assets/${fileName}`;
-      await FileSystem.copyFile(bundlePath, filePath);
-    }
-    
-    // Read the file
-    const fileContent = await FileSystem.readFile(filePath, 'utf8');
+    // In a web environment, we fetch the file from the public folder
+    const response = await fetch(`/${fileName}`);
+    const fileContent = await response.text();
     
     // Parse CSV
     return new Promise((resolve) => {
