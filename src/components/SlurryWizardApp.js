@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import AHDBLogo from '../assets/ahdb-logo.png';
 import { 
   livestockReferenceData, 
-  bankSlopeFactors, 
-  rainfallData
+  bankSlopeFactors
+  // Remove rainfallData from here
 } from '../data/referenceData';
+import RainfallService from '../services/RainfallService'; // Add this import
 import './SlurryWizardApp.css';
 
 /**
