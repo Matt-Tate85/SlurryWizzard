@@ -136,8 +136,8 @@ function SlurryWizardApp() {
   const [activeTab, setActiveTab] = useState(0);
   
   // Rainfall constants
-  const MAX_RAINFALL = 100; // Upper likely maximum 2 day rainfall (mm)
-  const MIN_RAINFALL = 50;  // Lower likely maximum 2 day rainfall (mm)
+  // const MAX_RAINFALL = 100; // Upper likely maximum 2 day rainfall (mm)
+  // const MIN_RAINFALL = 50;  // Lower likely maximum 2 day rainfall (mm)
   
   // Calculate total storage capacity
   const calculateStorageCapacity = () => {
