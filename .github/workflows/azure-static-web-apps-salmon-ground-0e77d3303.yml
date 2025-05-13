@@ -33,6 +33,13 @@ jobs:
         env:
           CI: false
       
+      - name: Check build output
+        run: |
+          echo "Checking if build directory exists:"
+          ls -la
+          echo "Contents of build directory:"
+          ls -la build || echo "Build directory does not exist"
+      
       - name: Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
