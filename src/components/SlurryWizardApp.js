@@ -3,9 +3,9 @@ import AHDBLogo from '../assets/ahdb-logo.png';
 import { 
   livestockReferenceData, 
   bankSlopeFactors
-  // Remove rainfallData from here
+  // Removed rainfallData from here
 } from '../data/referenceData';
-import RainfallService from '../services/RainfallService'; // Add this import
+import RainfallService from '../services/RainfallService'; // Added this import
 import './SlurryWizardApp.css';
 
 /**
@@ -218,8 +218,8 @@ function SlurryWizardApp() {
     };
   };
   
-  // Calculate rainfall contributions
-  const calculateRainwaterContribution = () => {
+  // Calculate rainfall contributions - Updated to use RainfallService
+  const calculateRainwaterContribution = async () => {
     // Calculate total yard area
     const totalYardArea = formData.yards.reduce((sum, yard) => sum + parseFloat(yard.area || 0), 0);
     
@@ -228,18 +228,44 @@ function SlurryWizardApp() {
     
     // Get or calculate the maximum likely 2-day rainfall
     let maxRainfall = parseFloat(formData.maxRainfall);
-    if (!maxRainfall) {
-      // Look up rainfall based on grid reference
-      const gridRef = formData.gridReference4Fig;
-      
-      // Simplified calculation based on Excel formula:
-      // IF((((SUM(D32:O32))*0.046)+25)>Lists!E3,Lists!E3,IF((((SUM(D32:O32))*0.046)+25)<Lists!E4,Lists!E4,(((SUM(D32:O32))*0.046)+25)))
-      const rainfallArr = rainfallData[gridRef] || rainfallData.DEFAULT;
-      const annualRainfall = rainfallArr.reduce((sum, val) => sum + val, 0);
-      const calculatedRainfall = (annualRainfall * 0.046) + 25;
-      
-      // Limit to the valid range
-      maxRainfall = Math.min(Math.max(calculatedRainfall, MIN_RAINFALL), MAX_RAINFALL);
+    if (!maxRainfall || isNaN(maxRainfall)) {
+      try {
+        // Extract 4-figure grid reference if needed
+        const gridRef = formData.gridReference4Fig || 
+                       RainfallService.extract4FigureGridRef(formData.gridReference10Fig);
+        
+        if (gridRef) {
+          // Look up rainfall based on grid reference
+          const rainfallData = await RainfallService.getRainfallData(gridRef);
+          
+          if (rainfallData) {
+            // Convert the rainfall data object to an array of monthly values
+            const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 
+                          'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            
+            // Calculate adjusted rainfall values
+            let totalAdjusted = 0;
+            
+            months.forEach(month => {
+              const gridValue = rainfallData[month] || 0;
+              const adjusted = RainfallService.calculateAdjustedRainfall(gridValue, null);
+              totalAdjusted += adjusted;
+            });
+            
+            // Calculate maximum likely 2-day rainfall
+            maxRainfall = await RainfallService.calculateMaxLikely2DayRainfall(totalAdjusted);
+          } else {
+            // Use default if grid reference not found
+            maxRainfall = 75; // A reasonable default between MIN_RAINFALL and MAX_RAINFALL
+          }
+        } else {
+          // No grid reference provided, use default
+          maxRainfall = 75;
+        }
+      } catch (error) {
+        console.error("Error calculating rainfall:", error);
+        maxRainfall = 75; // Fallback to default on error
+      }
     }
     
     // Calculate rainwater collected
@@ -387,67 +413,72 @@ function SlurryWizardApp() {
     return receptionPitSize;
   };
   
-  // Main calculation function that ties everything together
-  const performCalculations = () => {
-    // Calculate storage capacity
-    const storageCapacity = calculateStorageCapacity();
-    
-    // Calculate livestock values
-    const livestockValues = calculateLivestockValues();
-    
-    // Calculate rainfall contribution
-    const rainwaterValues = calculateRainwaterContribution();
-    
-    // Calculate washings
-    const washingValues = calculateWashings();
-    
-    // Calculate monthly breakdown
-    const monthlyData = calculateMonthlyBreakdown(
-      livestockValues, 
-      rainwaterValues, 
-      washingValues, 
-      storageCapacity
-    );
-    
-    // Calculate nitrogen loading
-    const nitrogenLoading = calculateNitrogenLoading(
-      livestockValues.totalNitrogen, 
-      parseFloat(formData.farmableArea)
-    );
-    
-    // Calculate reception pit size
-    const receptionPitSize = calculateReceptionPitSize(
-      livestockValues.totalDailyExcreta,
-      rainwaterValues
-    );
-    
-    // Generate recommendations
-    const recommendations = generateRecommendations(
-      monthlyData.storageMonths,
-      nitrogenLoading,
-      rainwaterValues.rainwaterCollected
-    );
-    
-    // Determine compliance status
-    const complianceStatus = monthlyData.storageMonths >= 6 
-      ? "You comply with the guidance for minimum storage of 6 months."
-      : "You do not have at least 6 months storage. Consider whether you can comply with FRfW requirements and increase storage capacity if not.";
-    
-    // Update the results state
-    setResults({
-      ...storageCapacity,
-      ...livestockValues,
-      ...rainwaterValues,
-      ...washingValues,
-      months: monthlyData.months,
-      monthlyProduction: monthlyData.monthlyProduction,
-      monthlyCapacity: monthlyData.monthlyCapacity,
-      storageMonths: monthlyData.storageMonths,
-      nitrogenLoading,
-      receptionPitSize,
-      complianceStatus,
-      recommendations
-    });
+  // Main calculation function that ties everything together - Updated to be async
+  const performCalculations = async () => {
+    try {
+      // Calculate storage capacity
+      const storageCapacity = calculateStorageCapacity();
+      
+      // Calculate livestock values
+      const livestockValues = calculateLivestockValues();
+      
+      // Calculate rainfall contribution - now async
+      const rainwaterValues = await calculateRainwaterContribution();
+      
+      // Calculate washings
+      const washingValues = calculateWashings();
+      
+      // Calculate monthly breakdown
+      const monthlyData = calculateMonthlyBreakdown(
+        livestockValues, 
+        rainwaterValues, 
+        washingValues, 
+        storageCapacity
+      );
+      
+      // Calculate nitrogen loading
+      const nitrogenLoading = calculateNitrogenLoading(
+        livestockValues.totalNitrogen, 
+        parseFloat(formData.farmableArea)
+      );
+      
+      // Calculate reception pit size
+      const receptionPitSize = calculateReceptionPitSize(
+        livestockValues.totalDailyExcreta,
+        rainwaterValues
+      );
+      
+      // Generate recommendations
+      const recommendations = generateRecommendations(
+        monthlyData.storageMonths,
+        nitrogenLoading,
+        rainwaterValues.rainwaterCollected
+      );
+      
+      // Determine compliance status
+      const complianceStatus = monthlyData.storageMonths >= 6 
+        ? "You comply with the guidance for minimum storage of 6 months."
+        : "You do not have at least 6 months storage. Consider whether you can comply with FRfW requirements and increase storage capacity if not.";
+      
+      // Update the results state
+      setResults({
+        ...storageCapacity,
+        ...livestockValues,
+        ...rainwaterValues,
+        ...washingValues,
+        months: monthlyData.months,
+        monthlyProduction: monthlyData.monthlyProduction,
+        monthlyCapacity: monthlyData.monthlyCapacity,
+        storageMonths: monthlyData.storageMonths,
+        nitrogenLoading,
+        receptionPitSize,
+        complianceStatus,
+        recommendations
+      });
+    } catch (error) {
+      console.error("Error in calculations:", error);
+      // Perhaps show an error message to the user here
+    }
   };
   
   // Handle form field changes
@@ -552,18 +583,8 @@ function SlurryWizardApp() {
   
   // Calculate grid reference from 10 figure to 4 figure
   const calculate4FigGridRef = (gridRef10Fig) => {
-    if (!gridRef10Fig || gridRef10Fig.length < 10) return "";
-    
-    // Extract the first 2 letters and first 2 digits of each coordinate
-    const letters = gridRef10Fig.match(/[A-Za-z]+/) ? gridRef10Fig.match(/[A-Za-z]+/)[0] : "";
-    const digits = gridRef10Fig.match(/\d+/g);
-    
-    if (!letters || !digits || digits.length < 2) return "";
-    
-    const eastings = digits[0].substring(0, 2);
-    const northings = digits[1].substring(0, 2);
-    
-    return letters + eastings + northings;
+    // Use the RainfallService function instead of duplicating logic
+    return RainfallService.extract4FigureGridRef(gridRef10Fig);
   };
   
   // Handle grid reference change
@@ -578,9 +599,13 @@ function SlurryWizardApp() {
     });
   };
   
-  // Effect to run calculations when form data changes
+  // Effect to run calculations when form data changes - Updated to handle async function
   useEffect(() => {
-    performCalculations();
+    const runCalculations = async () => {
+      await performCalculations();
+    };
+    
+    runCalculations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData]);
   
@@ -711,7 +736,7 @@ function SlurryWizardApp() {
                     step="1"
                   />
                   <small className="form-help-text">
-                    If known, otherwise leave blank and it will be calculated automatically
+                    If known, otherwise leave blank and it will be calculated automatically from grid reference
                   </small>
                 </div>
                 
@@ -1296,6 +1321,28 @@ function SlurryWizardApp() {
                 <p className="metric-value">
                   {results.totalAnnualSlurry.toFixed(1)} m³
                 </p>
+              </div>
+            </section>
+            
+            {/* Rainfall section - Added a new section to show rainfall data */}
+            <section className="form-section">
+              <h3 className="subsection-title">Rainfall Data</h3>
+              
+              <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">Grid Reference (4-figure)</label>
+                  <div className="form-text">{formData.gridReference4Fig || "Not specified"}</div>
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">Calculated Maximum 2-day Rainfall</label>
+                  <div className="form-text">{results.maxRainfall ? `${results.maxRainfall.toFixed(1)} mm` : "Not calculated"}</div>
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">Rainfall Contribution to Storage</label>
+                  <div className="form-text">{results.rainwaterCollected.toFixed(1)} m³</div>
+                </div>
               </div>
             </section>
             
